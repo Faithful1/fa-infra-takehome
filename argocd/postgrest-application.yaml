@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgrest
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Faithful1/fa-infra-takehome  # Change to your repository URL
+    targetRevision: main  # Change to your branch name
+    path: postgrest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: postgrest
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

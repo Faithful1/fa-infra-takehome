@@ -40,11 +40,29 @@ resource "docker_container" "postgres" {
     container_path = "/var/lib/postgresql/data"
   }
 
+  networks_advanced {
+    name = "k3d-${var.k3d_cluster_name}"
+  }
+
   restart = "unless-stopped"
+  depends_on = [terraform_data.k3d_cluster]
 }
 
 resource "docker_volume" "postgres_data" {
   name = "postgres-infra-takehome-data"
+}
+
+resource "terraform_data" "postgres_ready" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      until docker exec postgres-infra-takehome pg_isready -U postgres; do
+        echo "Waiting for PostgreSQL to be ready..."
+        sleep 2
+      done
+    EOT
+  }
+
+  depends_on = [docker_container.postgres]
 }
 
 provider "postgresql" {
@@ -57,5 +75,38 @@ provider "postgresql" {
 
 resource "postgresql_database" "postgrest" {
   name       = "postgrest"
-  depends_on = [docker_container.postgres]
+  depends_on = [terraform_data.postgres_ready]
+}
+
+resource "postgresql_role" "postgrest_super_user" {
+  name       = "postgrest_super_user"
+  login      = true
+  password   = var.postgrest_user_password
+  superuser  = true
+  depends_on = [postgresql_database.postgrest]
+}
+
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+  config_context = "k3d-${var.k3d_cluster_name}"
+}
+
+resource "kubernetes_namespace" "postgrest" {
+  metadata {
+    name = "postgrest"
+  }
+  depends_on = [terraform_data.k3d_cluster]
+}
+
+resource "kubernetes_secret" "postgrest_db" {
+  metadata {
+    name      = "postgrest-db-secret"
+    namespace = kubernetes_namespace.postgrest.metadata[0].name
+  }
+
+  data = {
+    db-uri = "postgres://${postgresql_role.postgrest_super_user.name}:${var.postgrest_user_password}@${docker_container.postgres.name}:5432/${postgresql_database.postgrest.name}"
+  }
+
+  depends_on = [kubernetes_namespace.postgrest, postgresql_role.postgrest_super_user]
 }

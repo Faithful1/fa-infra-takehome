@@ -1,0 +1,14 @@
+# Example terraform variables file
+# Copy this file to terraform.tfvars and update with your actual values
+# DO NOT commit terraform.tfvars to version control
+
+# PostgreSQL root password
+postgres_password = "your-secure-postgres-password"
+
+# PostgREST superuser password
+postgrest_user_password = "your-secure-postgrest-password"
+
+# Optional: Override defaults
+# k3d_cluster_name = "infra-takehome"
+# k3s_version = "v1.35.2-k3s1"
+# postgres_port = 5432
