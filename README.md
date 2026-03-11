@@ -69,7 +69,16 @@ Before running the infrastructure setup, ensure you have the following installed
 - kubectl binary
 - git
 
-### Configuration
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/Faithful1/fa-infra-takehome.git
+cd fa-infra-takehome
+```
+
+**Note**: Replace the repository URL with your fork if you've created one.
+
+### Step 2: Configuration
 
 1. **Navigate to the tofu directory**:
    ```bash
@@ -93,9 +102,7 @@ Before running the infrastructure setup, ensure you have the following installed
 
    **⚠️ IMPORTANT**: Never commit `terraform.tfvars` to version control! It's already excluded in `.gitignore`.
 
-### Deployment Steps
-
-#### Step 1: Initialize Infrastructure (Two-Phase Deployment)
+### Step 3: Initialize Infrastructure (Two-Phase Deployment)
 
 The infrastructure uses both Kubernetes and PostgreSQL providers. Due to provider initialization constraints, we use a two-phase deployment approach:
 
@@ -114,7 +121,7 @@ tofu apply
 **Why two phases?**
 The Kubernetes provider attempts to connect to the k3d cluster during the planning phase, before Terraform creates it. The first phase creates the cluster, and the second phase creates resources within it.
 
-#### Step 2: Install ArgoCD
+### Step 4: Install ArgoCD
 
 ```bash
 cd ..  # Return to project root
@@ -122,7 +129,7 @@ kubectl apply --server-side -k argocd/argocd/
 kubectl wait --for=condition=available --timeout=300s deployment/argocd-server -n argocd
 ```
 
-#### Step 3: Deploy PostgREST via ArgoCD
+### Step 5: Deploy PostgREST via ArgoCD
 
 ```bash
 kubectl apply -f argocd/postgrest-application.yaml
@@ -133,7 +140,7 @@ Wait for PostgREST to be deployed (this may take a minute as ArgoCD syncs from G
 kubectl wait --for=condition=available --timeout=120s deployment/postgrest -n postgrest
 ```
 
-#### Step 4: Inject Sample Data
+### Step 6: Inject Sample Data
 
 ```bash
 kubectl apply -f postgrest/data-injection-job.yaml
