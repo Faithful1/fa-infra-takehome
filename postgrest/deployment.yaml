@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgrest
+  namespace: postgrest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgrest
+  template:
+    metadata:
+      labels:
+        app: postgrest
+    spec:
+      containers:
+      - name: postgrest
+        image: postgrest/postgrest:v14.6
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PGRST_DB_URI
+          valueFrom:
+            secretKeyRef:
+              name: postgrest-db-secret
+              key: db-uri
+        - name: PGRST_DB_SCHEMA
+          value: "public"
+        - name: PGRST_DB_ANON_ROLE
+          value: "postgrest_super_user"
+        - name: PGRST_OPENAPI_SERVER_PROXY_URI
+          value: "http://localhost:8080"
