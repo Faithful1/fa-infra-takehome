@@ -52,6 +52,19 @@ resource "docker_volume" "postgres_data" {
   name = "postgres-infra-takehome-data"
 }
 
+resource "terraform_data" "postgres_ready" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      until docker exec postgres-infra-takehome pg_isready -U postgres; do
+        echo "Waiting for PostgreSQL to be ready..."
+        sleep 2
+      done
+    EOT
+  }
+
+  depends_on = [docker_container.postgres]
+}
+
 provider "postgresql" {
   host     = "localhost"
   port     = var.postgres_port
@@ -62,7 +75,7 @@ provider "postgresql" {
 
 resource "postgresql_database" "postgrest" {
   name       = "postgrest"
-  depends_on = [docker_container.postgres]
+  depends_on = [terraform_data.postgres_ready]
 }
 
 resource "postgresql_role" "postgrest_super_user" {

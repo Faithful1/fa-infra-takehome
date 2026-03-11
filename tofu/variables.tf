@@ -11,7 +11,7 @@ variable "k3s_version" {
 }
 
 variable "postgres_password" {
-  description = "Password for the PostgreSQL instance"
+  description = "Password for the PostgreSQL instance, picked from the tfvars file"
   type        = string
   sensitive   = true
 }
@@ -23,7 +23,7 @@ variable "postgres_port" {
 }
 
 variable "postgrest_user_password" {
-  description = "Password for the PostgREST superuser"
+  description = "Password for the PostgREST superuser, picked from the tfvars file"
   type        = string
   sensitive   = true
 }
