@@ -6,8 +6,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/Faithful1/fa-infra-takehome
-    targetRevision: feature/postgrest-setup
+    repoURL: https://github.com/Faithful1/fa-infra-takehome  # Change to your repository URL
+    targetRevision: main  # Change to your branch name
     path: postgrest
   destination:
     server: https://kubernetes.default.svc
