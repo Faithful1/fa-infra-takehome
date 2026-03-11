@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: inject-sample-data
+  namespace: postgrest
+spec:
+  template:
+    spec:
+      containers:
+      - name: postgres-client
+        image: postgres:16-alpine
+        env:
+        - name: DB_URI
+          valueFrom:
+            secretKeyRef:
+              name: postgrest-db-secret
+              key: db-uri
+        command:
+        - /bin/sh
+        - -c
+        - |
+          psql $DB_URI <<'EOF'
+          -- Create a sample table for products
+          CREATE TABLE IF NOT EXISTS products (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            price NUMERIC(10,2) NOT NULL,
+            stock INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+
+          -- Insert sample data
+          INSERT INTO products (name, description, price, stock) VALUES
+            ('Laptop', 'High-performance laptop with 16GB RAM', 1299.99, 15),
+            ('Wireless Mouse', 'Ergonomic wireless mouse with USB receiver', 29.99, 50),
+            ('Mechanical Keyboard', 'RGB mechanical keyboard with blue switches', 89.99, 30),
+            ('USB-C Hub', '7-in-1 USB-C hub with HDMI and Ethernet', 49.99, 25),
+            ('Monitor 27"', '27-inch 4K monitor with HDR support', 449.99, 10),
+            ('Webcam HD', '1080p webcam with built-in microphone', 79.99, 40),
+            ('Desk Lamp LED', 'Adjustable LED desk lamp with touch control', 34.99, 60),
+            ('External SSD 1TB', 'Portable 1TB SSD with USB 3.2', 119.99, 20),
+            ('Headphones', 'Noise-cancelling over-ear headphones', 199.99, 18),
+            ('Phone Stand', 'Adjustable aluminum phone stand', 19.99, 100);
+
+          -- Verify data was inserted
+          SELECT COUNT(*) as total_products FROM products;
+          EOF
+      restartPolicy: Never
+  backoffLimit: 3
